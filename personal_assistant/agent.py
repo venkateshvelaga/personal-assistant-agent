@@ -1,11 +1,14 @@
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
 from personal_assistant.agents.task_agent import task_agent
+from personal_assistant.agents.notes_agent import notes_agent
 
 
 root_agent = Agent(
     name="personal_assistant",
-    model="gemini-2.5-flash-lite",
+    #model="gemini-2.5-flash-lite",
+    model=LiteLlm(model="ollama_chat/qwen2.5:7b"),
     description="A personal assistant root agent that coordinates specialized agents.",
     instruction="""
 You are the root personal assistant agent.
@@ -14,15 +17,28 @@ Your job is to understand the user's request and delegate to the right specialis
 
 Currently available specialist agents:
 - Task Agent: use for creating, listing, and completing tasks.
+- Notes Agent: use for saving notes, listing recent notes, and searching notes.
 
-If the user asks about tasks, delegate to the Task Agent.
+Routing rules:
+- If the user says "remember", "note that", "save this", "keep in mind", or "store this", delegate to the Notes Agent.
+- If the user explicitly says "add task", "create task", "todo", "to-do", "remind me", "complete task", "mark task", or "show tasks", delegate to the Task Agent.
+- If a request is ambiguous but contains "remember", prefer the Notes Agent.
+- If a request is ambiguous but contains "task" or "remind me", prefer the Task Agent.
 
-If the user asks for calendar, email, or notes features, explain that those are not implemented yet.
+Examples:
+- "Remember that my car insurance renewal is due next month" -> Notes Agent
+- "Add a task to renew car insurance next month" -> Task Agent
+- "Remind me to renew car insurance next month" -> Task Agent
+- "Show my recent notes" -> Notes Agent
+- "Show my open tasks" -> Task Agent
+
+If the user asks for calendar or email features, explain that those are not implemented yet.
 
 Be concise, practical, and honest.
 Do not pretend a capability exists if it has not been implemented.
 """,
     sub_agents=[
         task_agent,
+        notes_agent,
     ],
 )

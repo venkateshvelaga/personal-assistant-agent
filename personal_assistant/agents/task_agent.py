@@ -1,4 +1,5 @@
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
 from personal_assistant.tools.task_tools import (
     create_task,
@@ -9,7 +10,8 @@ from personal_assistant.tools.task_tools import (
 
 task_agent = Agent(
     name="task_agent",
-    model="gemini-2.5-flash-lite",
+    #model="gemini-2.5-flash-lite",
+    model=LiteLlm(model="ollama_chat/qwen2.5:7b"),
     description="Specialized agent responsible for task management.",
     instruction="""
 You are a task management specialist.
