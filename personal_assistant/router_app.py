@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from personal_assistant.routing.intent_router import Intent, classify_intent
 from personal_assistant.tools.task_tools import create_task, list_tasks, complete_task
 from personal_assistant.tools.notes_tools import save_note, list_recent_notes, search_notes
-
+from personal_assistant.extraction.task_extractor import extract_task_fields
+from personal_assistant.extraction.notes_extractor import extract_note_fields
 
 load_dotenv()
 
@@ -29,7 +30,12 @@ def handle_message(message: str) -> dict:
             return complete_task(latest_task_id)
 
         # Simple first version: create task using full message as title
-        return create_task(title=message, priority="medium")
+        fields = extract_task_fields(message)
+        return create_task(
+            title=fields["title"],
+            due_date=fields["due_date"],
+            priority=fields["priority"],
+)
 
     if intent == Intent.NOTE:
         text = message.lower()
@@ -41,7 +47,11 @@ def handle_message(message: str) -> dict:
             query = message.replace("search notes", "").replace("for", "").strip()
             return search_notes(query)
 
-        return save_note(topic="general", content=message)
+        fields = extract_note_fields(message)
+        return save_note(
+            topic=fields["topic"],
+            content=fields["content"],
+)
 
     return {
         "status": "unsupported",

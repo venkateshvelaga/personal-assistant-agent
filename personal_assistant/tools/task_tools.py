@@ -1,7 +1,23 @@
 from personal_assistant.db.database import get_connection, initialize_database
-
+from personal_assistant.extraction.task_extractor import extract_task_fields
 
 initialize_database()
+
+def create_task_from_message(message: str) -> dict:
+    """
+    Create a task from a natural language user message.
+
+    Args:
+        message: Natural language task request, such as
+        "Add a high priority task to renew insurance tomorrow".
+    """
+    fields = extract_task_fields(message)
+
+    return create_task(
+        title=fields["title"],
+        due_date=fields["due_date"],
+        priority=fields["priority"],
+    )
 
 
 def create_task(title: str, due_date: str = "", priority: str = "medium") -> dict:

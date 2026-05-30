@@ -1,8 +1,22 @@
 from personal_assistant.db.database import get_connection, initialize_database
-
+from personal_assistant.extraction.notes_extractor import extract_note_fields
 
 initialize_database()
 
+def save_note_from_message(message: str) -> dict:
+    """
+    Save a note from a natural language user message.
+
+    Args:
+        message: Natural language note request, such as
+        "Remember that my insurance renewal is due next month".
+    """
+    fields = extract_note_fields(message)
+
+    return save_note(
+        topic=fields["topic"],
+        content=fields["content"],
+    )
 
 def save_note(topic: str, content: str) -> dict:
     """
