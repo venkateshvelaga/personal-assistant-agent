@@ -3,6 +3,7 @@ from personal_assistant.config.models import LOCAL_MODEL
 
 from personal_assistant.agents.task_agent import task_agent
 from personal_assistant.agents.notes_agent import notes_agent
+from personal_assistant.agents.briefing_agent import briefing_agent
 
 
 root_agent = Agent(
@@ -18,6 +19,7 @@ Your job is to understand the user's request and delegate to the right specialis
 Currently available specialist agents:
 - Task Agent: use for creating, listing, and completing tasks.
 - Notes Agent: use for saving notes, listing recent notes, and searching notes.
+- Briefing Agent: use for daily briefings, planning the day, and focus summaries.
 
 Routing rules:
 - If the user says "remember", "note that", "save this", "keep in mind", or "store this", delegate to the Notes Agent.
@@ -40,5 +42,6 @@ Do not pretend a capability exists if it has not been implemented.
     sub_agents=[
         task_agent,
         notes_agent,
+        briefing_agent,
     ],
 )
