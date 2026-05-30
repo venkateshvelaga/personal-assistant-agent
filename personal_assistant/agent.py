@@ -5,7 +5,7 @@ from personal_assistant.agents.task_agent import task_agent
 
 root_agent = Agent(
     name="personal_assistant",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-flash-lite",
     description="A personal assistant root agent that coordinates specialized agents.",
     instruction="""
 You are the root personal assistant agent.
