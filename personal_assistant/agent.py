@@ -1,5 +1,5 @@
 from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
+from personal_assistant.config.models import LOCAL_MODEL
 
 from personal_assistant.agents.task_agent import task_agent
 from personal_assistant.agents.notes_agent import notes_agent
@@ -8,7 +8,7 @@ from personal_assistant.agents.notes_agent import notes_agent
 root_agent = Agent(
     name="personal_assistant",
     #model="gemini-2.5-flash-lite",
-    model=LiteLlm(model="ollama_chat/qwen2.5:7b"),
+    model=LOCAL_MODEL,
     description="A personal assistant root agent that coordinates specialized agents.",
     instruction="""
 You are the root personal assistant agent.

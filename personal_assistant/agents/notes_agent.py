@@ -1,5 +1,5 @@
 from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
+from personal_assistant.config.models import LOCAL_MODEL
 
 from personal_assistant.tools.notes_tools import (
     save_note,
@@ -11,7 +11,7 @@ from personal_assistant.tools.notes_tools import (
 notes_agent = Agent(
     name="notes_agent",
     #model="gemini-2.5-flash-lite",
-    model=LiteLlm(model="ollama_chat/qwen2.5:7b"),
+    model= LOCAL_MODEL,
     description="Specialized agent responsible for saving and searching notes.",
     instruction="""
 You are a notes and lightweight memory specialist.
