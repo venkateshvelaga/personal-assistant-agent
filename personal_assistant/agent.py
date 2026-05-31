@@ -5,7 +5,7 @@ from personal_assistant.agents.task_agent import task_agent
 from personal_assistant.agents.notes_agent import notes_agent
 from personal_assistant.agents.briefing_agent import briefing_agent
 from personal_assistant.agents.calendar_agent import calendar_agent
-
+from personal_assistant.agents.gmail_agent import gmail_agent
 
 root_agent = Agent(
     name="personal_assistant",
@@ -22,6 +22,7 @@ Currently available specialist agents:
 - Notes Agent: use for saving notes, listing recent notes, and searching notes.
 - Briefing Agent: use for daily briefings, planning the day, and focus summaries.
 - Calendar Agent: use for today's calendar events and meeting schedule.
+- Gmail Agent: use for recent inbox messages and Gmail summaries.
 Routing rules:
 - If the user says "remember", "note that", "save this", "keep in mind", or "store this", delegate to the Notes Agent.
 - If the user explicitly says "add task", "create task", "todo", "to-do", "remind me", "complete task", "mark task", or "show tasks", delegate to the Task Agent.
@@ -34,8 +35,10 @@ Examples:
 - "Remind me to renew car insurance next month" -> Task Agent
 - "Show my recent notes" -> Notes Agent
 - "Show my open tasks" -> Task Agent
-
-If the user asks for calendar or email features, explain that those are not implemented yet.
+- "What's on my calendar today?" -> Calendar Agent
+- "Give me a briefing for the day" -> Briefing Agent
+- "What's in my Gmail inbox?" -> Gmail Agent
+- "Summarize my recent emails" -> Gmail Agent
 
 Be concise, practical, and honest.
 Do not pretend a capability exists if it has not been implemented.
@@ -44,6 +47,7 @@ Do not pretend a capability exists if it has not been implemented.
         task_agent,
         notes_agent,
         briefing_agent,
-        calendar_agent
+        calendar_agent,
+        gmail_agent,
     ],
 )
