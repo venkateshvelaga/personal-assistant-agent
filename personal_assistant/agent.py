@@ -4,6 +4,7 @@ from personal_assistant.config.models import LOCAL_MODEL
 from personal_assistant.agents.task_agent import task_agent
 from personal_assistant.agents.notes_agent import notes_agent
 from personal_assistant.agents.briefing_agent import briefing_agent
+from personal_assistant.agents.calendar_agent import calendar_agent
 
 
 root_agent = Agent(
@@ -20,7 +21,7 @@ Currently available specialist agents:
 - Task Agent: use for creating, listing, and completing tasks.
 - Notes Agent: use for saving notes, listing recent notes, and searching notes.
 - Briefing Agent: use for daily briefings, planning the day, and focus summaries.
-
+- Calendar Agent: use for today's calendar events and meeting schedule.
 Routing rules:
 - If the user says "remember", "note that", "save this", "keep in mind", or "store this", delegate to the Notes Agent.
 - If the user explicitly says "add task", "create task", "todo", "to-do", "remind me", "complete task", "mark task", or "show tasks", delegate to the Task Agent.
@@ -43,5 +44,6 @@ Do not pretend a capability exists if it has not been implemented.
         task_agent,
         notes_agent,
         briefing_agent,
+        calendar_agent
     ],
 )
