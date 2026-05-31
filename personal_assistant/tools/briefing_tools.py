@@ -5,20 +5,26 @@ from litellm import completion
 from personal_assistant.config.models import LOCAL_MODEL_NAME
 from personal_assistant.tools.task_tools import list_tasks
 from personal_assistant.tools.notes_tools import list_recent_notes
-
+from personal_assistant.tools.gmail_tools import list_recent_gmail_messages
+from personal_assistant.tools.calendar_tools import list_today_calendar_events
 
 def collect_briefing_data() -> dict:
     """
-    Collect task and note information for a daily briefing.
+    Collect task, note, calendar and Gmail information
+    for a daily briefing.
     """
+
     tasks = list_tasks("open")
     notes = list_recent_notes(5)
+    calendar = list_today_calendar_events()
+    emails = list_recent_gmail_messages(5)
 
     return {
         "tasks": tasks,
         "notes": notes,
+        "calendar": calendar,
+        "emails": emails,
     }
-
 
 def generate_daily_briefing() -> dict:
     """
@@ -27,18 +33,33 @@ def generate_daily_briefing() -> dict:
     briefing_data = collect_briefing_data()
 
     prompt = f"""
-You are a practical personal assistant.
+You are an executive personal assistant.
 
-Create a concise daily briefing from the following data.
+Create a concise but useful daily briefing.
+
+Sections:
+
+1. High Priority Tasks
+2. Notes / Reminders
+3. Calendar
+4. Email Highlights
+5. Suggested Focus
 
 Rules:
-- Focus on open tasks and recent notes.
+
 - Highlight high priority tasks first.
-- Mention anything due today, tomorrow, this evening, this month, or next month.
-- Do not invent calendar or email information.
-- Keep it useful and concise.
+- Mention anything due today, tomorrow,
+  this evening, this month, or next month.
+- Summarize calendar events if available.
+- Summarize recent emails.
+- Ignore obvious marketing emails unless
+  they appear important.
+- Do not invent information.
+- Keep the briefing concise.
+- End with Suggested Focus.
 
 Data:
+
 {json.dumps(briefing_data, indent=2)}
 """
 

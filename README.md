@@ -1,116 +1,319 @@
 # Personal Assistant Agent
 
-A local-first AI personal assistant built with Google ADK, Ollama/Qwen, SQLite, tools, sub-agents, structured extraction, and daily briefing generation.
+A local-first AI Personal Assistant built using Google ADK, Ollama, Qwen, SQLite, Gmail, Google Calendar, and a multi-agent architecture.
 
 ---
 
-# What This Project Demonstrates
+# Project Goal
 
-This project demonstrates a practical agentic AI architecture:
+The goal of this project is to learn practical Agentic AI development by building a real personal assistant that can:
 
-* ADK root agent
-* Specialist sub-agents
-* Tool calling
-* SQLite persistence
-* Local LLM execution with Ollama
-* Structured extraction
-* Deterministic routing
-* Daily briefing generation
+* Manage tasks
+* Store personal notes
+* Generate AI-powered daily briefings
+* Read Google Calendar events
+* Read Gmail inbox messages
+* Run entirely on a local LLM
+
+The project is intentionally designed to demonstrate:
+
+* Multi-Agent Systems
+* Tool Calling
+* Structured Extraction
+* Local LLM Integration
+* Persistence
+* External API Integrations
 
 ---
 
-# Current Architecture
+# Current Capabilities
+
+## Task Management
+
+The assistant can:
+
+* Create tasks from natural language
+* Extract priority automatically
+* Extract due dates automatically
+* List open tasks
+* Mark tasks completed
+
+Examples:
 
 ```text
-User
- ↓
-ADK Web / CLI
- ↓
-Root Agent
- ├── Task Agent
- ├── Notes Agent
- └── Briefing Agent
- ↓
-Tools
- ├── Task Tools
- ├── Notes Tools
- └── Briefing Tools
- ↓
-SQLite + Local Qwen Model
+Add a high priority task to renew insurance tomorrow
+
+Show my open tasks
+
+Mark my insurance task complete
 ```
 
 ---
 
-# Features
+## Notes / Personal Memory
 
-## Task Management
+The assistant can:
 
-Supported capabilities:
+* Save notes from natural language
+* Automatically identify note topics
+* Search notes
+* List recent notes
+
+Examples:
+
+```text
+Remember that my car insurance renewal is due next month
+
+Show my notes
+
+Search notes for insurance
+```
+
+---
+
+## Google Calendar Integration
+
+The assistant can:
+
+* Authenticate with Google Calendar
+* Read today's events
+* Summarize calendar schedule
+
+Examples:
+
+```text
+What is on my calendar today?
+
+Show today's meetings
+```
+
+Authentication uses OAuth Desktop Application flow.
+
+Calendar access is currently read-only.
+
+---
+
+## Gmail Integration
+
+The assistant can:
+
+* Authenticate with Gmail
+* Read recent inbox messages
+* Summarize inbox activity
+
+Examples:
+
+```text
+Show my recent emails
+
+Summarize my inbox
+```
+
+Authentication uses OAuth Desktop Application flow.
+
+Gmail access is currently read-only.
+
+---
+
+## AI Daily Briefing
+
+The assistant generates a personalized daily briefing using:
+
+* Open Tasks
+* Personal Notes
+* Calendar Events
+* Gmail Messages
+
+Examples:
+
+```text
+Give me my daily briefing
+
+What should I focus on today?
+```
+
+Example output:
+
+```text
+High Priority Tasks
+- Renew insurance tomorrow
+
+Calendar
+- Director Sync at 10:00 AM
+
+Email Highlights
+- Google Security Alert
+- Citadel Job Alert
+
+Suggested Focus
+- Renew insurance
+- Review security alert
+```
+
+---
+
+# Architecture
+
+## High-Level Architecture
+
+```text
+User
+ ↓
+ADK Root Agent
+ ├── Task Agent
+ ├── Notes Agent
+ ├── Calendar Agent
+ ├── Gmail Agent
+ └── Briefing Agent
+      ↓
+      Tools
+      ↓
+SQLite
+Google Calendar
+Gmail
+Ollama/Qwen
+```
+
+---
+
+# Agents
+
+## Root Agent
+
+Responsibilities:
+
+* Understand user intent
+* Route requests
+* Delegate to specialized agents
+
+---
+
+## Task Agent
+
+Responsibilities:
 
 * Create tasks
-* List open tasks
+* List tasks
 * Complete tasks
-* Extract task fields from natural language
+
+Uses:
+
+```text
+task_tools.py
+```
+
+---
+
+## Notes Agent
+
+Responsibilities:
+
+* Save notes
+* Search notes
+* List notes
+
+Uses:
+
+```text
+notes_tools.py
+```
+
+---
+
+## Calendar Agent
+
+Responsibilities:
+
+* Read Google Calendar
+* Summarize today's events
+
+Uses:
+
+```text
+calendar_tools.py
+calendar_service.py
+```
+
+---
+
+## Gmail Agent
+
+Responsibilities:
+
+* Read Gmail inbox
+* Summarize recent emails
+
+Uses:
+
+```text
+gmail_tools.py
+gmail_service.py
+```
+
+---
+
+## Briefing Agent
+
+Responsibilities:
+
+Generate a unified daily briefing.
+
+Uses:
+
+```text
+task_tools
+notes_tools
+calendar_tools
+gmail_tools
+```
+
+The briefing agent aggregates data from multiple sources and then uses Qwen to create a concise summary.
+
+---
+
+# Structured Extraction
+
+Instead of storing raw user input, the system extracts structured data.
 
 Example:
+
+Input:
 
 ```text
 Add a high priority task to renew insurance tomorrow
 ```
 
-Stored as:
+Extracted:
 
-```text
-title: renew insurance tomorrow
-due_date: tomorrow
-priority: high
+```json
+{
+  "title": "renew insurance",
+  "priority": "high",
+  "due_date": "tomorrow"
+}
 ```
+
+This improves consistency and enables better AI summaries.
 
 ---
 
-## Notes / Lightweight Memory
+# Local LLM Setup
 
-Supported capabilities:
-
-* Save notes
-* List recent notes
-* Search notes
-* Extract note topic and clean content
-
-Example:
+This project uses:
 
 ```text
-Remember that my car insurance renewal is due next month
+Ollama
++
+Qwen 2.5 7B
 ```
 
-Stored as:
+Model:
 
 ```text
-topic: insurance
-content: my car insurance renewal is due next month
+ollama_chat/qwen2.5:7b
 ```
 
----
-
-## Daily Briefing
-
-Supported capabilities:
-
-* Collect open tasks
-* Collect recent notes
-* Generate a concise daily briefing using local Qwen
-
-Example:
-
-```text
-Give me my daily briefing
-```
-
----
-
-# Local Model Setup
-
-This project uses Ollama with Qwen 2.5 7B.
+Flow:
 
 ```text
 ADK
@@ -119,224 +322,121 @@ LiteLLM
  ↓
 Ollama
  ↓
-qwen2.5:7b
+Qwen
 ```
 
-Configured model:
+No cloud LLM is required.
+
+---
+
+# Persistence
+
+Tasks and notes are stored in SQLite.
+
+Database:
 
 ```text
-ollama_chat/qwen2.5:7b
+personal_assistant.db
 ```
+
+Data survives:
+
+* Laptop restart
+* ADK restart
+* Ollama restart
 
 ---
 
 # Project Structure
 
 ```text
-personal-assistant-agent/
+personal_assistant/
 │
-├── personal_assistant/
-│   ├── agent.py
-│   │
-│   ├── agents/
-│   │   ├── task_agent.py
-│   │   ├── notes_agent.py
-│   │   └── briefing_agent.py
-│   │
-│   ├── config/
-│   │   └── models.py
-│   │
-│   ├── db/
-│   │   └── database.py
-│   │
-│   ├── extraction/
-│   │   ├── task_extractor.py
-│   │   └── notes_extractor.py
-│   │
-│   ├── routing/
-│   │   └── intent_router.py
-│   │
-│   └── tools/
-│       ├── task_tools.py
-│       ├── notes_tools.py
-│       └── briefing_tools.py
+├── agent.py
 │
-├── data/
-│   └── personal_assistant.db
+├── agents/
+│   ├── task_agent.py
+│   ├── notes_agent.py
+│   ├── calendar_agent.py
+│   ├── gmail_agent.py
+│   └── briefing_agent.py
 │
-├── requirements.txt
-├── .gitignore
-└── README.md
+├── tools/
+│   ├── task_tools.py
+│   ├── notes_tools.py
+│   ├── calendar_tools.py
+│   ├── gmail_tools.py
+│   └── briefing_tools.py
+│
+├── integrations/
+│   ├── calendar_service.py
+│   └── gmail_service.py
+│
+├── extraction/
+│   ├── task_extractor.py
+│   └── notes_extractor.py
+│
+├── db/
+│   └── database.py
+│
+└── config/
+    └── models.py
 ```
 
 ---
 
-# Setup
+# Running the Project
 
-## 1. Create Virtual Environment
+Activate environment:
 
 ```bash
-python -m venv .venv
 source .venv/Scripts/activate
 ```
 
-## 2. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-## 3. Install Ollama
-
-Download and install:
-
-```text
-https://ollama.com
-```
-
-Pull model:
-
-```bash
-ollama pull qwen2.5:7b
-```
-
-Verify:
-
-```bash
-ollama run qwen2.5:7b
-```
-
-## 4. Run ADK Web
+Start ADK:
 
 ```bash
 adk web
 ```
 
-Open the local URL shown in the terminal.
-
----
-
-# Example Prompts
+Open:
 
 ```text
-Add a high priority task to renew insurance tomorrow
-
-Show my open tasks
-
-Mark task 1 complete
-
-Remember that my car insurance renewal is due next month
-
-Show my recent notes
-
-Search notes for insurance
-
-Give me my daily briefing
-
-What should I focus on today?
+http://localhost:8000
 ```
 
 ---
 
-# Deterministic Router
+# Future Enhancements
 
-The project also contains a deterministic router for routing experiments.
+Planned improvements:
 
-Example:
-
-```bash
-python -m personal_assistant.router_app \
-"Remember that my insurance renewal is due next month"
-```
-
-This bypasses ADK routing and routes directly using intent classification.
-
----
-
-# Data Persistence
-
-Tasks and notes are stored in:
-
-```text
-data/personal_assistant.db
-```
-
-The database survives:
-
-* Laptop restart
-* ADK restart
-* VS Code restart
-* Ollama restart
-
-The database is intentionally excluded from Git.
+* Weekly Briefing Agent
+* Unified Search Agent
+* Better Agent-to-Agent Collaboration
+* Custom Web UI
+* Model Service Abstraction
+* Database Inspector Tool
+* RAG-based Knowledge Search
+* Mobile Interface
 
 ---
 
-# Current Limitations
+# Learning Outcomes
 
-* ADK Web routing can occasionally remain inside the current active sub-agent.
-* Calendar integration not implemented.
-* Gmail integration not implemented.
-* Custom UI not implemented.
-* Database is local only.
-
----
-
-# Roadmap
-
-## Near-Term
-
-1. Google Calendar Integration
-2. Gmail Integration
-3. Custom Web UI
-4. Calendar-aware Daily Briefing
-5. Gmail-aware Daily Briefing
-
-## Medium-Term
-
-1. Unified Model Service
-2. Database Inspection Utility
-3. Better Routing Controls
-4. Weekly Summary Agent
-5. Personal Knowledge Search
-
-## Long-Term
-
-1. RAG Support
-2. Multi-user Support
-3. Cloud Deployment
-4. Mobile UI
-5. CI/CD Pipeline
-
----
-
-# Learning Goals
-
-This project was built to learn:
+This project demonstrates:
 
 * Agentic AI
-* Google ADK
-* Root Agent and Sub-Agent architecture
+* ADK Multi-Agent Design
 * Tool Calling
 * Local LLMs
 * Ollama
 * LiteLLM
-* SQLite
+* OAuth Integrations
+* SQLite Persistence
 * Structured Extraction
-* Deterministic Routing
-* AI-generated Summaries
+* AI-Powered Summarization
 
 ---
 
-# Notes
-
-Do not commit:
-
-```text
-.env
-.venv/
-personal_assistant/.adk/
-data/*.db
-```
-
-These contain local environment configuration and runtime data.
+Built as a hands-on project to understand how modern AI assistants are architected end-to-end.
