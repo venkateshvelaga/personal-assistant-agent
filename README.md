@@ -1,442 +1,320 @@
 # Personal Assistant Agent
 
-A local-first AI Personal Assistant built using Google ADK, Ollama, Qwen, SQLite, Gmail, Google Calendar, and a multi-agent architecture.
+A local-first AI Personal Assistant built using Google ADK, Ollama, Qwen, SQLite, Gmail, Google Calendar, structured extraction, and a multi-agent architecture.
 
----
+## Features
 
-# Project Goal
+- Task Management
+- Notes / Personal Memory
+- Google Calendar Integration (Read Only)
+- Gmail Integration (Read Only)
+- AI Daily Briefing
+- Database Inspector
+- Prompt Injection Guard Foundation
+- Local LLM (Qwen via Ollama)
 
-The goal of this project is to learn practical Agentic AI development by building a real personal assistant that can:
-
-* Manage tasks
-* Store personal notes
-* Generate AI-powered daily briefings
-* Read Google Calendar events
-* Read Gmail inbox messages
-* Run entirely on a local LLM
-
-The project is intentionally designed to demonstrate:
-
-* Multi-Agent Systems
-* Tool Calling
-* Structured Extraction
-* Local LLM Integration
-* Persistence
-* External API Integrations
-
----
-
-# Current Capabilities
-
-## Task Management
-
-The assistant can:
-
-* Create tasks from natural language
-* Extract priority automatically
-* Extract due dates automatically
-* List open tasks
-* Mark tasks completed
-
-Examples:
-
-```text
-Add a high priority task to renew insurance tomorrow
-
-Show my open tasks
-
-Mark my insurance task complete
-```
-
----
-
-## Notes / Personal Memory
-
-The assistant can:
-
-* Save notes from natural language
-* Automatically identify note topics
-* Search notes
-* List recent notes
-
-Examples:
-
-```text
-Remember that my car insurance renewal is due next month
-
-Show my notes
-
-Search notes for insurance
-```
-
----
-
-## Google Calendar Integration
-
-The assistant can:
-
-* Authenticate with Google Calendar
-* Read today's events
-* Summarize calendar schedule
-
-Examples:
-
-```text
-What is on my calendar today?
-
-Show today's meetings
-```
-
-Authentication uses OAuth Desktop Application flow.
-
-Calendar access is currently read-only.
-
----
-
-## Gmail Integration
-
-The assistant can:
-
-* Authenticate with Gmail
-* Read recent inbox messages
-* Summarize inbox activity
-
-Examples:
-
-```text
-Show my recent emails
-
-Summarize my inbox
-```
-
-Authentication uses OAuth Desktop Application flow.
-
-Gmail access is currently read-only.
-
----
-
-## AI Daily Briefing
-
-The assistant generates a personalized daily briefing using:
-
-* Open Tasks
-* Personal Notes
-* Calendar Events
-* Gmail Messages
-
-Examples:
-
-```text
-Give me my daily briefing
-
-What should I focus on today?
-```
-
-Example output:
-
-```text
-High Priority Tasks
-- Renew insurance tomorrow
-
-Calendar
-- Director Sync at 10:00 AM
-
-Email Highlights
-- Google Security Alert
-- Citadel Job Alert
-
-Suggested Focus
-- Renew insurance
-- Review security alert
-```
-
----
-
-# Architecture
-
-## High-Level Architecture
+## Architecture
 
 ```text
 User
  ↓
-ADK Root Agent
+ADK Web
+ ↓
+Root Agent
  ├── Task Agent
  ├── Notes Agent
+ ├── Briefing Agent
  ├── Calendar Agent
  ├── Gmail Agent
- └── Briefing Agent
+ └── Database Agent
       ↓
       Tools
       ↓
 SQLite
-Google Calendar
-Gmail
-Ollama/Qwen
-```
-
----
-
-# Agents
-
-## Root Agent
-
-Responsibilities:
-
-* Understand user intent
-* Route requests
-* Delegate to specialized agents
-
----
-
-## Task Agent
-
-Responsibilities:
-
-* Create tasks
-* List tasks
-* Complete tasks
-
-Uses:
-
-```text
-task_tools.py
-```
-
----
-
-## Notes Agent
-
-Responsibilities:
-
-* Save notes
-* Search notes
-* List notes
-
-Uses:
-
-```text
-notes_tools.py
-```
-
----
-
-## Calendar Agent
-
-Responsibilities:
-
-* Read Google Calendar
-* Summarize today's events
-
-Uses:
-
-```text
-calendar_tools.py
-calendar_service.py
-```
-
----
-
-## Gmail Agent
-
-Responsibilities:
-
-* Read Gmail inbox
-* Summarize recent emails
-
-Uses:
-
-```text
-gmail_tools.py
-gmail_service.py
-```
-
----
-
-## Briefing Agent
-
-Responsibilities:
-
-Generate a unified daily briefing.
-
-Uses:
-
-```text
-task_tools
-notes_tools
-calendar_tools
-gmail_tools
-```
-
-The briefing agent aggregates data from multiple sources and then uses Qwen to create a concise summary.
-
----
-
-# Structured Extraction
-
-Instead of storing raw user input, the system extracts structured data.
-
-Example:
-
-Input:
-
-```text
-Add a high priority task to renew insurance tomorrow
-```
-
-Extracted:
-
-```json
-{
-  "title": "renew insurance",
-  "priority": "high",
-  "due_date": "tomorrow"
-}
-```
-
-This improves consistency and enables better AI summaries.
-
----
-
-# Local LLM Setup
-
-This project uses:
-
-```text
+Google Calendar API
+Gmail API
 Ollama
-+
-Qwen 2.5 7B
+Qwen
 ```
 
-Model:
+## Agents
+
+### Root Agent
+Routes requests to specialized agents.
+
+### Task Agent
+- Create tasks
+- List tasks
+- Complete tasks
+
+### Notes Agent
+- Save notes
+- List notes
+- Search notes
+
+### Calendar Agent
+- Read Google Calendar events
+
+### Gmail Agent
+- Read Gmail messages
+- Summarize inbox
+
+### Briefing Agent
+Generates daily briefings using:
+- Tasks
+- Notes
+- Calendar
+- Gmail
+
+### Database Agent
+Provides:
+- Task counts
+- Note counts
+- Recent records
+- Database inspection
+
+---
+
+## Local Model Stack
 
 ```text
-ollama_chat/qwen2.5:7b
-```
-
-Flow:
-
-```text
-ADK
+Google ADK
  ↓
 LiteLLM
  ↓
 Ollama
  ↓
-Qwen
+Qwen 2.5 7B
 ```
 
-No cloud LLM is required.
+Current model:
+
+```text
+ollama_chat/qwen2.5:7b
+```
+
+Ollama is the local model runner.
+Qwen is the actual LLM.
 
 ---
 
-# Persistence
+## Persistence
 
-Tasks and notes are stored in SQLite.
+SQLite database stores:
 
-Database:
-
-```text
-personal_assistant.db
-```
+- Tasks
+- Notes
 
 Data survives:
-
-* Laptop restart
-* ADK restart
-* Ollama restart
+- Laptop restart
+- ADK restart
+- Ollama restart
 
 ---
 
-# Project Structure
+## Google OAuth Setup
+
+### Create Google Cloud Project
+
+Enable:
+
+- Gmail API
+- Google Calendar API
+
+### Configure OAuth
+
+1. Configure OAuth Consent Screen
+2. Add yourself as Test User
+3. Create OAuth Desktop Credentials
+4. Download credentials JSON
+
+Rename:
 
 ```text
-personal_assistant/
-│
-├── agent.py
-│
-├── agents/
-│   ├── task_agent.py
-│   ├── notes_agent.py
-│   ├── calendar_agent.py
-│   ├── gmail_agent.py
-│   └── briefing_agent.py
-│
-├── tools/
-│   ├── task_tools.py
-│   ├── notes_tools.py
-│   ├── calendar_tools.py
-│   ├── gmail_tools.py
-│   └── briefing_tools.py
-│
-├── integrations/
-│   ├── calendar_service.py
-│   └── gmail_service.py
-│
-├── extraction/
-│   ├── task_extractor.py
-│   └── notes_extractor.py
-│
-├── db/
-│   └── database.py
-│
-└── config/
-    └── models.py
+credentials.json
+```
+
+Place in project root.
+
+### First Login
+
+Calendar access creates:
+
+```text
+token.json
+```
+
+Gmail access creates:
+
+```text
+gmail_token.json
+```
+
+Never commit:
+
+```text
+credentials.json
+token.json
+gmail_token.json
 ```
 
 ---
 
-# Running the Project
+## Installation
 
-Activate environment:
+### Clone
 
 ```bash
+git clone <repo-url>
+cd personal-assistant-agent
+```
+
+### Virtual Environment
+
+```bash
+python -m venv .venv
 source .venv/Scripts/activate
 ```
 
-Start ADK:
+### Install
+
+```bash
+pip install -r requirements.txt
+```
+
+### Install Ollama
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+Verify:
+
+```bash
+ollama run qwen2.5:7b
+```
+
+### Start ADK
 
 ```bash
 adk web
 ```
 
-Open:
+---
+
+## Example Prompts
+
+### Tasks
 
 ```text
-http://localhost:8000
+Add a high priority task to renew insurance tomorrow
+Show my open tasks
+```
+
+### Notes
+
+```text
+Remember that my insurance renewal is due next month
+Show my notes
+```
+
+### Calendar
+
+```text
+What is on my calendar today?
+```
+
+### Gmail
+
+```text
+Summarize my inbox
+```
+
+### Briefing
+
+```text
+Give me my daily briefing
+What should I focus on today?
+```
+
+### Database
+
+```text
+Show database stats
+Inspect database
 ```
 
 ---
 
-# Future Enhancements
+## Security
 
-Planned improvements:
+Current implementation:
 
-* Weekly Briefing Agent
-* Unified Search Agent
-* Better Agent-to-Agent Collaboration
-* Custom Web UI
-* Model Service Abstraction
-* Database Inspector Tool
-* RAG-based Knowledge Search
-* Mobile Interface
+```text
+personal_assistant/security/prompt_guard.py
+```
+
+Capabilities:
+
+- Detect common prompt injection attempts
+- Detect attempts to reveal:
+  - credentials.json
+  - token.json
+  - gmail_token.json
+  - API keys
+  - hidden instructions
+
+Status:
+
+- Implemented
+- Tested
+- Not yet wired into ADK request path
 
 ---
 
-# Learning Outcomes
+## Project Structure
+
+```text
+personal_assistant/
+├── agent.py
+├── agents/
+├── tools/
+├── integrations/
+├── extraction/
+├── db/
+├── security/
+└── config/
+```
+
+---
+
+## Future Enhancements
+
+- Weekly Briefing
+- Unified Search
+- Guard Agent
+- Tool Authorization
+- Audit Logging
+- Custom UI
+- Model Service Abstraction
+- CI/CD
+- Automated Tests
+
+---
+
+## Learning Outcomes
 
 This project demonstrates:
 
-* Agentic AI
-* ADK Multi-Agent Design
-* Tool Calling
-* Local LLMs
-* Ollama
-* LiteLLM
-* OAuth Integrations
-* SQLite Persistence
-* Structured Extraction
-* AI-Powered Summarization
-
----
-
-Built as a hands-on project to understand how modern AI assistants are architected end-to-end.
+- Agentic AI
+- Google ADK
+- Tool Calling
+- Multi-Agent Systems
+- Structured Extraction
+- SQLite Persistence
+- OAuth Integrations
+- Gmail API
+- Calendar API
+- Local LLMs
+- Ollama
+- Prompt Injection Basics
