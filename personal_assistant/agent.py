@@ -6,6 +6,7 @@ from personal_assistant.agents.notes_agent import notes_agent
 from personal_assistant.agents.briefing_agent import briefing_agent
 from personal_assistant.agents.calendar_agent import calendar_agent
 from personal_assistant.agents.gmail_agent import gmail_agent
+from personal_assistant.agents.database_agent import database_agent
 
 root_agent = Agent(
     name="personal_assistant",
@@ -23,6 +24,8 @@ Currently available specialist agents:
 - Briefing Agent: use for daily briefings, planning the day, and focus summaries.
 - Calendar Agent: use for today's calendar events and meeting schedule.
 - Gmail Agent: use for recent inbox messages and Gmail summaries.
+- Database Agent: use for database stats, counts, and inspection.
+
 Routing rules:
 - If the user says "remember", "note that", "save this", "keep in mind", or "store this", delegate to the Notes Agent.
 - If the user explicitly says "add task", "create task", "todo", "to-do", "remind me", "complete task", "mark task", or "show tasks", delegate to the Task Agent.
@@ -40,6 +43,7 @@ Examples:
 - "What's in my Gmail inbox?" -> Gmail Agent
 - "Summarize my recent emails" -> Gmail Agent
 
+
 Be concise, practical, and honest.
 Do not pretend a capability exists if it has not been implemented.
 """,
@@ -49,5 +53,6 @@ Do not pretend a capability exists if it has not been implemented.
         briefing_agent,
         calendar_agent,
         gmail_agent,
+        database_agent,
     ],
 )
