@@ -32,6 +32,7 @@ NOTE_KEYWORDS = [
     "list notes",
     "recent notes",
     "search notes",
+    "show my notes",
 ]
 
 
