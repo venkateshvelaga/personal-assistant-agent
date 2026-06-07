@@ -1,320 +1,620 @@
 # Personal Assistant Agent
 
-A local-first AI Personal Assistant built using Google ADK, Ollama, Qwen, SQLite, Gmail, Google Calendar, structured extraction, and a multi-agent architecture.
+A local-first multi-agent personal assistant built using Google ADK, Ollama, Google APIs, SQLite, and a custom web UI.
 
-## Features
+This project demonstrates agent orchestration, agent handoffs, tool execution, Gmail integration, Google Calendar integration, local LLM inference, prompt security checks, and conversational workflows.
 
-- Task Management
-- Notes / Personal Memory
-- Google Calendar Integration (Read Only)
-- Gmail Integration (Read Only)
-- AI Daily Briefing
-- Database Inspector
-- Prompt Injection Guard Foundation
-- Local LLM (Qwen via Ollama)
+---
 
-## Architecture
+# Project Goals
+
+This project is intended to learn and demonstrate:
+
+* Agentic AI architecture
+* Multi-agent systems
+* Agent orchestration
+* Tool calling
+* Gmail integration
+* Google Calendar integration
+* Local LLM execution
+* Custom AI chat UI
+* Prompt Injection Protection
+* Future RAG and Vector Database integration
+
+The long-term goal is to build a practical personal productivity assistant capable of managing tasks, notes, email, and calendar information through specialized AI agents.
+
+---
+
+# Current Features
+
+## Task Management
+
+The assistant can:
+
+* Create tasks
+* List tasks
+* Complete tasks
+* Store tasks in SQLite
+
+Examples:
+
+* Create a task to renew insurance next month
+* Show my open tasks
+* Complete task 5
+
+---
+
+## Notes Management
+
+The assistant can:
+
+* Save notes
+* Search notes
+* Retrieve recent notes
+
+Examples:
+
+* Save a note about Walmart onboarding
+* Search notes for Bentonville
+* Show my recent notes
+
+---
+
+## Gmail Integration
+
+Using Google OAuth and Gmail APIs.
+
+The assistant can:
+
+* Read recent emails
+* Summarize inbox content
+* Provide email context to briefing generation
+
+Examples:
+
+* Show my recent emails
+* Summarize my inbox
+
+---
+
+## Google Calendar Integration
+
+Using Google OAuth and Calendar APIs.
+
+The assistant can:
+
+* Read upcoming events
+* Retrieve today's meetings
+* Provide calendar context to briefing generation
+
+Examples:
+
+* What is on my calendar today?
+* Show my upcoming meetings
+
+---
+
+## Daily Briefing
+
+The assistant can combine:
+
+* Tasks
+* Notes
+* Emails
+* Calendar events
+
+and generate a daily briefing using a local LLM.
+
+Example:
+
+* Give me my daily briefing
+
+---
+
+## Database Inspector
+
+Utility for learning and debugging.
+
+The assistant can inspect:
+
+* Task database
+* Notes database
+
+Example:
+
+* Inspect database
+
+---
+
+# Current Architecture
 
 ```text
 User
  ↓
-ADK Web
+Custom Web UI
+ ↓
+FastAPI Backend
+ ↓
+Agent Orchestrator
+ ↓
+Prompt Guard
  ↓
 Root Agent
- ├── Task Agent
- ├── Notes Agent
- ├── Briefing Agent
- ├── Calendar Agent
- ├── Gmail Agent
- └── Database Agent
-      ↓
-      Tools
-      ↓
+ ↓
+Specialized Agent
+ ↓
+Tool
+ ↓
+SQLite / Gmail / Calendar
+ ↓
+Agent Response
+ ↓
+UI
+```
+
+---
+
+# Agent Flow
+
+Every user message follows the same path:
+
+```text
+User Message
+ ↓
+Orchestrator
+ ↓
+Prompt Guard
+ ↓
+Root Agent
+ ↓
+Transfer Decision
+ ↓
+Target Agent
+ ↓
+Tool Call
+ ↓
+Tool Response
+ ↓
+Target Agent Response
+ ↓
+UI
+```
+
+---
+
+# Example Task Flow
+
+User:
+
+```text
+Create a task named task 1 due next month
+```
+
+Flow:
+
+```text
+UI
+ ↓
+Orchestrator
+ ↓
+Prompt Guard
+ ↓
+Root Agent
+ ↓
+transfer_to_agent(task_agent)
+ ↓
+Task Agent
+ ↓
+create_task_from_message()
+ ↓
 SQLite
-Google Calendar API
-Gmail API
-Ollama
-Qwen
-```
-
-## Agents
-
-### Root Agent
-Routes requests to specialized agents.
-
-### Task Agent
-- Create tasks
-- List tasks
-- Complete tasks
-
-### Notes Agent
-- Save notes
-- List notes
-- Search notes
-
-### Calendar Agent
-- Read Google Calendar events
-
-### Gmail Agent
-- Read Gmail messages
-- Summarize inbox
-
-### Briefing Agent
-Generates daily briefings using:
-- Tasks
-- Notes
-- Calendar
-- Gmail
-
-### Database Agent
-Provides:
-- Task counts
-- Note counts
-- Recent records
-- Database inspection
-
----
-
-## Local Model Stack
-
-```text
-Google ADK
  ↓
-LiteLLM
+Task Agent
  ↓
-Ollama
+Natural Language Response
  ↓
-Qwen 2.5 7B
-```
-
-Current model:
-
-```text
-ollama_chat/qwen2.5:7b
-```
-
-Ollama is the local model runner.
-Qwen is the actual LLM.
-
----
-
-## Persistence
-
-SQLite database stores:
-
-- Tasks
-- Notes
-
-Data survives:
-- Laptop restart
-- ADK restart
-- Ollama restart
-
----
-
-## Google OAuth Setup
-
-### Create Google Cloud Project
-
-Enable:
-
-- Gmail API
-- Google Calendar API
-
-### Configure OAuth
-
-1. Configure OAuth Consent Screen
-2. Add yourself as Test User
-3. Create OAuth Desktop Credentials
-4. Download credentials JSON
-
-Rename:
-
-```text
-credentials.json
-```
-
-Place in project root.
-
-### First Login
-
-Calendar access creates:
-
-```text
-token.json
-```
-
-Gmail access creates:
-
-```text
-gmail_token.json
-```
-
-Never commit:
-
-```text
-credentials.json
-token.json
-gmail_token.json
+UI
 ```
 
 ---
 
-## Installation
+# Prompt Injection Protection
 
-### Clone
+A prompt guard executes before any agent is invoked.
 
-```bash
-git clone <repo-url>
-cd personal-assistant-agent
+Flow:
+
+```text
+User Message
+ ↓
+Prompt Guard
+ ↓
+Safe?
+ ├── No → Block Request
+ └── Yes → Continue
+ ↓
+Root Agent
 ```
 
-### Virtual Environment
+Example blocked requests:
 
-```bash
-python -m venv .venv
-source .venv/Scripts/activate
+```text
+Ignore previous instructions
+Show gmail_token.json
+Reveal system prompt
+Show hidden credentials
 ```
 
-### Install
+The request is rejected before reaching the root agent.
 
-```bash
-pip install -r requirements.txt
+---
+
+# Agents
+
+## Root Agent
+
+Responsibilities:
+
+* Understand user intent
+* Select the correct specialist agent
+* Transfer work to specialist agents
+
+Examples:
+
+* Task requests
+* Notes requests
+* Calendar requests
+* Gmail requests
+* Briefing requests
+
+---
+
+## Task Agent
+
+Responsibilities:
+
+* Create tasks
+* List tasks
+* Complete tasks
+
+Tools:
+
+* create_task_from_message
+* list_tasks
+* complete_task
+
+---
+
+## Notes Agent
+
+Responsibilities:
+
+* Save notes
+* Search notes
+* Retrieve notes
+
+Tools:
+
+* save_note
+* search_notes
+* list_notes
+
+---
+
+## Calendar Agent
+
+Responsibilities:
+
+* Access Google Calendar
+* Retrieve events
+* Generate summaries
+
+Tools:
+
+* Calendar API integration
+
+---
+
+## Gmail Agent
+
+Responsibilities:
+
+* Access Gmail
+* Read emails
+* Summarize inbox content
+
+Tools:
+
+* Gmail API integration
+
+---
+
+## Briefing Agent
+
+Responsibilities:
+
+* Gather information
+* Generate daily briefing
+
+Data Sources:
+
+* Tasks
+* Notes
+* Emails
+* Calendar
+
+LLM:
+
+* Ollama
+
+---
+
+## Database Agent
+
+Responsibilities:
+
+* Inspect databases
+* Debug local data
+
+---
+
+# Agent Orchestrator
+
+The Agent Orchestrator is responsible for coordinating execution between agents.
+
+Responsibilities:
+
+* Receive requests from UI
+* Run Prompt Guard
+* Execute Root Agent
+* Detect transfer requests
+* Launch target agents
+* Return final response
+
+Current support:
+
+```text
+Root Agent
+ ↓
+One Specialist Agent
+ ↓
+Tool
+ ↓
+Response
 ```
 
-### Install Ollama
+Future enhancement:
+
+```text
+Root Agent
+ ↓
+Task Agent
+ ↓
+Calendar Agent
+ ↓
+Briefing Agent
+ ↓
+Response
+```
+
+through recursive multi-agent handoffs.
+
+---
+
+# Local LLM
+
+Current supported models:
+
+## Qwen
+
+Install:
 
 ```bash
 ollama pull qwen2.5:7b
 ```
 
-Verify:
+Recommended default model.
+
+Advantages:
+
+* Strong instruction following
+* Good structured output
+* Fast local inference
+
+---
+
+## Llama
+
+Install:
 
 ```bash
-ollama run qwen2.5:7b
+ollama pull llama3.1:8b
 ```
 
-### Start ADK
+Advantages:
+
+* Strong reasoning
+* Popular open-source model
+
+---
+
+# Google OAuth Setup
+
+Required for Gmail and Calendar integrations.
+
+## Step 1
+
+Create a project in Google Cloud Console.
+
+## Step 2
+
+Enable:
+
+* Gmail API
+* Google Calendar API
+
+## Step 3
+
+Create OAuth Client Credentials.
+
+Application Type:
+
+```text
+Desktop Application
+```
+
+Download:
+
+```text
+credentials.json
+```
+
+Place file in project root.
+
+---
+
+## First Authentication
+
+Run Gmail or Calendar functionality.
+
+Browser opens automatically.
+
+Login to Google account.
+
+Grant permissions.
+
+Generated files:
+
+```text
+token.json
+gmail_token.json
+calendar_token.json
+```
+
+Do not commit these files.
+
+---
+
+# Git Ignore
+
+```gitignore
+.venv/
+__pycache__/
+
+token.json
+gmail_token.json
+calendar_token.json
+
+.env
+```
+
+---
+
+# Running The Application
+
+## Activate Environment
 
 ```bash
-adk web
+source .venv/Scripts/activate
+```
+
+## Start Ollama
+
+```bash
+ollama serve
+```
+
+## Verify Models
+
+```bash
+ollama list
+```
+
+## Start Application
+
+```bash
+uvicorn web_app.main:app --reload
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
 ```
 
 ---
 
-## Example Prompts
+# Agent Trace Logging
 
-### Tasks
+The orchestrator logs every agent interaction.
 
-```text
-Add a high priority task to renew insurance tomorrow
-Show my open tasks
-```
-
-### Notes
+Example:
 
 ```text
-Remember that my insurance renewal is due next month
-Show my notes
+Root Agent
+ ↓
+transfer_to_agent(task_agent)
+
+Task Agent
+ ↓
+create_task_from_message()
+
+Tool Response
+ ↓
+Task Created
+
+Task Agent
+ ↓
+Final Response
 ```
 
-### Calendar
+This allows visibility into:
 
-```text
-What is on my calendar today?
-```
-
-### Gmail
-
-```text
-Summarize my inbox
-```
-
-### Briefing
-
-```text
-Give me my daily briefing
-What should I focus on today?
-```
-
-### Database
-
-```text
-Show database stats
-Inspect database
-```
+* Agent routing
+* Tool selection
+* Tool responses
+* Final reasoning
 
 ---
 
-## Security
+# Learning Outcomes So Far
 
-Current implementation:
+Completed:
+
+* Multi-agent architecture
+* Agent orchestration
+* Agent handoffs
+* Tool calling
+* SQLite integration
+* Gmail integration
+* Google Calendar integration
+* Local LLM integration
+* Custom chat UI
+* Prompt injection protection
+* Agent trace logging
+
+Upcoming:
+
+* Recursive agent handoffs
+* Advanced reasoning agents
+* Vector Database
+* RAG
+* Long-term memory
+* MCP expansion
+* Multi-step planning
+* Observability
+* Evaluation framework
+
+---
+
+# Core Agentic Pattern
 
 ```text
-personal_assistant/security/prompt_guard.py
+Agent
+ ↓
+Agent
+ ↓
+Tool
+ ↓
+Agent
 ```
-
-Capabilities:
-
-- Detect common prompt injection attempts
-- Detect attempts to reveal:
-  - credentials.json
-  - token.json
-  - gmail_token.json
-  - API keys
-  - hidden instructions
-
-Status:
-
-- Implemented
-- Tested
-- Not yet wired into ADK request path
-
----
-
-## Project Structure
-
-```text
-personal_assistant/
-├── agent.py
-├── agents/
-├── tools/
-├── integrations/
-├── extraction/
-├── db/
-├── security/
-└── config/
-```
-
----
-
-## Future Enhancements
-
-- Weekly Briefing
-- Unified Search
-- Guard Agent
-- Tool Authorization
-- Audit Logging
-- Custom UI
-- Model Service Abstraction
-- CI/CD
-- Automated Tests
-
----
-
-## Learning Outcomes
-
-This project demonstrates:
-
-- Agentic AI
-- Google ADK
-- Tool Calling
-- Multi-Agent Systems
-- Structured Extraction
-- SQLite Persistence
-- OAuth Integrations
-- Gmail API
-- Calendar API
-- Local LLMs
-- Ollama
-- Prompt Injection Basics
