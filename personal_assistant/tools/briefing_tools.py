@@ -1,7 +1,6 @@
 import json
 
-from litellm import completion
-
+from personal_assistant.observability.llm_observer import observed_completion
 from personal_assistant.config.models import LOCAL_MODEL_NAME
 from personal_assistant.config.models import MODEL_COMPLETION_CONFIG
 from personal_assistant.tools.task_tools import list_tasks
@@ -64,7 +63,7 @@ Data:
 {json.dumps(briefing_data, indent=2)}
 """
 
-    response = completion(
+    response = observed_completion(
         model=LOCAL_MODEL_NAME,
         messages=[
             {

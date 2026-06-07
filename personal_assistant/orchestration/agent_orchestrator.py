@@ -1,5 +1,6 @@
 import re
 import uuid
+import time
 
 from google.genai import types
 from google.adk.runners import Runner
@@ -15,6 +16,13 @@ from personal_assistant.agents.database_agent import database_agent
 
 from personal_assistant.security.prompt_guard import guard_user_message
 
+from personal_assistant.observability.metrics import (
+    AGENT_INVOCATIONS_TOTAL,
+    AGENT_DURATION_SECONDS,
+    AGENT_TRANSFERS_TOTAL,
+    PROMPT_GUARD_BLOCKS_TOTAL,
+    ERRORS_TOTAL,
+)
 
 APP_NAME = "personal_assistant_custom_ui"
 USER_ID = "local_user"
@@ -57,6 +65,7 @@ async def handle_user_message_with_agents(
     guard_result = guard_user_message(message)
 
     if not guard_result["allowed"]:
+        PROMPT_GUARD_BLOCKS_TOTAL.inc()
         return {
             "session_id": session_id,
             "handled_by": "prompt_guard",
@@ -77,6 +86,11 @@ async def handle_user_message_with_agents(
     transfer_agent = extract_transfer_agent(root_result["text"])
 
     if transfer_agent and transfer_agent in RUNNERS:
+        AGENT_TRANSFERS_TOTAL.labels(
+            from_agent="root",
+            to_agent=transfer_agent,
+        ).inc()
+        
         target_result = await run_agent(
             agent_name=transfer_agent,
             message=message,
@@ -101,32 +115,48 @@ async def handle_user_message_with_agents(
 
 
 async def run_agent(agent_name: str, message: str, session_id: str) -> dict:
-    await ensure_session(session_id)
+    """
+    Run a single ADK agent and collect its emitted events.
 
-    content = types.Content(
-        role="user",
-        parts=[types.Part(text=message)],
-    )
+    This function records agent invocation count and duration.
+    """
+    AGENT_INVOCATIONS_TOTAL.labels(agent_name=agent_name).inc()
+    start_time = time.perf_counter()
 
-    events = []
+    try:
+        await ensure_session(session_id)
 
-    async for event in RUNNERS[agent_name].run_async(
-        user_id=USER_ID,
-        session_id=session_id,
-        new_message=content,
-    ):
-        events.append(event)
+        content = types.Content(
+            role="user",
+            parts=[types.Part(text=message)],
+        )
 
-    text = extract_last_text(events)
+        events = []
 
-    log_events(agent_name, events)
+        async for event in RUNNERS[agent_name].run_async(
+            user_id=USER_ID,
+            session_id=session_id,
+            new_message=content,
+        ):
+            events.append(event)
 
-    return {
-        "agent": agent_name,
-        "text": text,
-        "event_count": len(events),
-    }
+        text = extract_last_text(events)
 
+        log_events(agent_name, events)
+
+        return {
+            "agent": agent_name,
+            "text": text,
+            "event_count": len(events),
+        }
+
+    except Exception:
+        ERRORS_TOTAL.labels(component=f"agent.{agent_name}").inc()
+        raise
+
+    finally:
+        duration = time.perf_counter() - start_time
+        AGENT_DURATION_SECONDS.labels(agent_name=agent_name).observe(duration)
 
 async def ensure_session(session_id: str) -> None:
     try:
