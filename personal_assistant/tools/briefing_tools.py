@@ -3,6 +3,7 @@ import json
 from litellm import completion
 
 from personal_assistant.config.models import LOCAL_MODEL_NAME
+from personal_assistant.config.models import MODEL_COMPLETION_CONFIG
 from personal_assistant.tools.task_tools import list_tasks
 from personal_assistant.tools.notes_tools import list_recent_notes
 from personal_assistant.tools.gmail_tools import list_recent_gmail_messages
@@ -71,6 +72,7 @@ Data:
                 "content": prompt,
             }
         ],
+        **MODEL_COMPLETION_CONFIG,
     )
 
     return {
