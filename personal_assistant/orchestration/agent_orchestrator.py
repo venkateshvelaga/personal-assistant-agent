@@ -13,6 +13,8 @@ from personal_assistant.agents.calendar_agent import calendar_agent
 from personal_assistant.agents.gmail_agent import gmail_agent
 from personal_assistant.agents.database_agent import database_agent
 
+from personal_assistant.security.prompt_guard import guard_user_message
+
 
 APP_NAME = "personal_assistant_custom_ui"
 USER_ID = "local_user"
@@ -51,6 +53,18 @@ async def handle_user_message_with_agents(
     3. Target agent calls its tools.
     4. Return final response.
     """
+
+    guard_result = guard_user_message(message)
+
+    if not guard_result["allowed"]:
+        return {
+            "session_id": session_id,
+            "handled_by": "prompt_guard",
+            "root_trace": None,
+            "final_trace": None,
+            "reply": "I blocked this request because it looks like a prompt injection or secret access attempt.",
+            "guard_result": guard_result,
+        }
 
     session_id = session_id or str(uuid.uuid4())
 
